@@ -352,6 +352,7 @@ kbd {
 }
 .bedside-action:hover,
 .bedside-action.selected { border-color: #1676c5; background: #edf7ff; }
+.bedside-action:disabled { pointer-events: none; }
 .bedside-action.completed { border-color: #247f52; background: #e8f7ed; }
 .bedside-action.completed::after {
   content: "완료";

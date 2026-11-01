@@ -271,10 +271,12 @@
 
   let bedsideTypeTimer;
   let bedsideActionTimer;
+  let bedsideInputTimer;
 
   function closeModal(){
     clearInterval(bedsideTypeTimer);
     clearTimeout(bedsideActionTimer);
+    clearTimeout(bedsideInputTimer);
     modalRoot.hidden=true;
     modalRoot.innerHTML="";
     updateTasks();
@@ -365,6 +367,11 @@
     </div>`;
     modalRoot.hidden=false;
     modalRoot.querySelectorAll("[data-close]").forEach(btn=>btn.addEventListener("click",closeModal));
+    const bedsideButtons=[...modalRoot.querySelectorAll("[data-action]")];
+    bedsideButtons.forEach(btn=>{btn.disabled=true;});
+    bedsideInputTimer=setTimeout(()=>{
+      bedsideButtons.forEach(btn=>{btn.disabled=false;});
+    },450);
     const actionMessages={
       hand:{text:"손 위생을 시행한다!",keys:["손 위생"]},
       greet:{text:"안녕하세요. 투약 전 안전 확인을 시행하겠습니다!",keys:["투약 전 안전 확인"]},
@@ -375,7 +382,10 @@
       admin:{text:"최종 안전 확인 후 투약한다!",keys:["최종 안전 확인","투약"]},
       cancel:{text:"침상 확인을 취소하고 병실로 돌아간다!",keys:["취소"]}
     };
-    modalRoot.querySelectorAll("[data-action]").forEach(btn=>btn.addEventListener("click",()=>{
+    bedsideButtons.forEach(btn=>btn.addEventListener("click",event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      if(btn.disabled)return;
       clearTimeout(bedsideActionTimer);
       modalRoot.querySelectorAll("[data-action]").forEach(item=>item.classList.toggle("selected",item===btn));
       const action=btn.dataset.action;
@@ -538,9 +548,27 @@
     button.addEventListener("lostpointercapture",release);
     button.addEventListener("contextmenu",event=>event.preventDefault());
   });
-  document.getElementById("mobileInteract").addEventListener("pointerdown",event=>{
+  const mobileInteract=document.getElementById("mobileInteract");
+  let mobileInteractHandledAt=0;
+  mobileInteract.addEventListener("pointerdown",event=>{
     event.preventDefault();
+    event.stopPropagation();
+    if(mobileInteract.setPointerCapture&&event.pointerId!==undefined)mobileInteract.setPointerCapture(event.pointerId);
+  });
+  mobileInteract.addEventListener("pointerup",event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    mobileInteractHandledAt=Date.now();
     interact();
+  });
+  mobileInteract.addEventListener("pointercancel",event=>{
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  mobileInteract.addEventListener("click",event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    if(Date.now()-mobileInteractHandledAt>600)interact();
   });
 
   document.getElementById("enterSimulation").addEventListener("click",()=>{
