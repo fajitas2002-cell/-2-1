@@ -7,6 +7,7 @@
       weight: 10.2, measured: "오늘 07:30", medication: "교육용 흡입약 A", route: "네뷸라이저 흡입",
       routeKey: "neb", time: "09:00", adultDose: 100, dose: 15, maxDose: 15, unit: "mg",
       tool: "네뷸라이저", concentration: "교육용 단일 용량", doses: [0.5, 15, 150],
+      sceneImage: "assets/patient-1.png",
       monitor: "호흡수와 산소포화도를 확인했습니다."
     },
     {
@@ -14,6 +15,7 @@
       weight: 17, measured: "오늘 07:40", medication: "교육용 주사약 B", route: "근육주사",
       routeKey: "im", time: "09:30", adultDose: 100, dose: 25, maxDose: 25, unit: "mg",
       tool: "근육주사용 주사기", concentration: "10 mg/mL (교육용)", doses: [2.5, 25, 250],
+      sceneImage: "assets/patient-2.png",
       monitor: "주사 부위와 전신 반응을 확인했습니다."
     },
     {
@@ -21,6 +23,7 @@
       weight: 20.4, measured: "오늘 07:50", medication: "교육용 경구약 C", route: "경구",
       routeKey: "po", time: "10:00", adultDose: 100, dose: 30, maxDose: 30, unit: "mg",
       tool: "경구용 약컵", concentration: "10 mg/mL (교육용)", doses: [3, 30, 300],
+      sceneImage: "assets/patient-3.png",
       monitor: "복용 여부와 삼킴 상태를 확인했습니다."
     }
   ];
@@ -338,7 +341,7 @@
     const prepared=state.prepared.has(index)?"준비 완료":"아직 준비하지 않음";
     modalRoot.innerHTML=`<div class="bedside-backdrop">
       <section class="bedside-dialog" role="dialog" aria-modal="true" aria-labelledby="bedsideTitle">
-        <div class="bedside-scene" role="img" aria-label="간호사가 침상에 있는 대상자와 대화하는 장면">
+        <div class="bedside-scene" role="img" aria-label="${p.bed} 대상자의 투약 장면" style="background-image:url('${p.sceneImage}')">
           <div class="bedside-message" id="bedsideMessage" aria-live="polite">대상자에게&nbsp;<span class="key-term">투약 전 안전 확인</span>을 시행한다!</div>
         </div>
         <div class="bedside-menu">
