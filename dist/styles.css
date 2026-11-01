@@ -8,6 +8,7 @@
   --mint-dark: #14745f;
   --mint-pale: #dff4ee;
   --blue: #4b84bd;
+  --key-blue: #1676c5;
   --blue-pale: #e3eef8;
   --coral: #db5d5d;
   --coral-pale: #ffeded;
@@ -152,7 +153,7 @@ kbd {
   border-radius: var(--radius);
   background: #9ad2c4;
   box-shadow: var(--shadow);
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 1 / 1;
   align-self: center;
 }
 #gameCanvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
@@ -229,25 +230,39 @@ kbd {
 .safety-note p { margin: 5px 0 0; color: #7b4c50; font-size: 11px; line-height: 1.55; }
 
 .modal-root { position: fixed; inset: 0; z-index: 100; }
-.modal-backdrop { width: 100%; height: 100%; display: grid; place-items: center; padding: 20px; background: rgba(14,38,45,.68); }
+.modal-backdrop { width: 100%; height: 100%; display: grid; place-items: end center; padding: 28px; background: rgba(14,38,45,.34); }
 .dialog {
-  width: min(760px, 100%);
-  max-height: min(820px, calc(100dvh - 32px));
+  position: relative;
+  width: min(820px, 100%);
+  max-height: min(620px, calc(100dvh - 56px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 3px solid #315f64;
-  border-radius: var(--radius);
-  background: white;
-  box-shadow: 0 14px 0 rgba(14,38,45,.28);
+  border: 4px solid #315f64;
+  border-radius: 34px;
+  background: #fffdf3;
+  box-shadow: 0 12px 0 rgba(14,38,45,.24), 0 22px 48px rgba(14,38,45,.25);
+}
+.dialog::after {
+  content: "";
+  position: absolute;
+  left: 54px;
+  bottom: -19px;
+  width: 30px;
+  height: 30px;
+  border-right: 4px solid #315f64;
+  border-bottom: 4px solid #315f64;
+  background: #fffdf3;
+  transform: rotate(45deg);
 }
 .dialog.wide { width: min(960px, 100%); }
-.dialog-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 20px 14px; border-bottom: 2px solid var(--line); background: #f4faf8; }
+.dialog-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 20px 28px 14px; border-bottom: 2px solid #c8ddd9; background: #f7fbf7; border-radius: 30px 30px 0 0; }
 .dialog-header h2 { margin: 0; font-size: 21px; letter-spacing: -.03em; }
 .dialog-kicker { margin-bottom: 5px; }
 .close-button { width: 34px; height: 34px; border: 0; border-radius: 8px; color: white; background: var(--ink); font-size: 22px; line-height: 1; }
-.dialog-body { overflow: auto; padding: 20px; }
-.dialog-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 2px solid var(--line); background: #f8fbfa; }
+.dialog-body { overflow: auto; padding: 22px 28px; font-size: 15px; line-height: 1.65; }
+.dialog-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 28px 20px; border-top: 2px solid #c8ddd9; background: #fffdf3; border-radius: 0 0 30px 30px; }
+.key-term { color: var(--key-blue); font-weight: 900; }
 
 .patient-tabs { display: flex; gap: 7px; margin-bottom: 18px; flex-wrap: wrap; }
 .tab-button { border: 2px solid var(--line); border-radius: 8px; padding: 9px 12px; color: var(--ink-soft); background: white; font-weight: 800; }
@@ -269,7 +284,7 @@ kbd {
 .patient-menu { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
 .choice-button { min-height: 56px; padding: 12px; text-align: left; color: var(--ink); border: 2px solid var(--line); background: white; }
 .choice-button:hover, .choice-button.selected { border-color: var(--mint); background: var(--mint-pale); }
-.choice-button strong { display: block; margin-bottom: 3px; font-size: 13px; }
+.choice-button strong { display: block; margin-bottom: 3px; color: var(--key-blue); font-size: 13px; }
 .choice-button small { color: var(--ink-soft); font-size: 10px; }
 .choice-button.critical:hover { border-color: var(--coral); background: var(--coral-pale); }
 
@@ -279,6 +294,7 @@ kbd {
 .check-row input { width: 18px; height: 18px; accent-color: var(--mint-dark); }
 
 .calc-equation { margin: 14px 0; padding: 14px; border-radius: 8px; color: var(--mint-dark); background: var(--mint-pale); text-align: center; font: 800 15px/1.5 ui-monospace, "Malgun Gothic", monospace; }
+.clark-rule { margin: 14px 0; padding: 16px; border: 2px solid #9bc7e8; border-radius: 14px; color: #215a86; background: #edf7ff; text-align: center; font: 900 15px/1.7 ui-monospace, "Malgun Gothic", monospace; }
 .answer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .answer-button { padding: 14px 8px; border: 2px solid var(--line); border-radius: 8px; background: white; color: var(--ink); font-weight: 900; }
 .answer-button:hover { border-color: var(--mint); background: var(--mint-pale); }
@@ -333,9 +349,14 @@ kbd {
   .option-grid, .answer-grid { grid-template-columns: 1fr; }
   .result-grid { grid-template-columns: 1fr; }
   .dialog-body { padding: 15px; }
-  .game-stage { min-height: 430px; aspect-ratio: auto; }
+  .game-stage { min-height: 430px; aspect-ratio: 1 / 1; }
   .screen-layer { overflow: auto; padding: 12px; }
   .start-card { max-height: 405px; overflow: auto; }
+  .modal-backdrop { padding: 12px 8px 22px; }
+  .dialog { border-radius: 24px; max-height: calc(100dvh - 40px); }
+  .dialog-header { border-radius: 20px 20px 0 0; padding: 16px 18px 12px; }
+  .dialog-body { padding: 16px 18px; }
+  .dialog-footer { padding: 12px 18px 18px; border-radius: 0 0 20px 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

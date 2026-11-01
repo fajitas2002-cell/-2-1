@@ -4,23 +4,23 @@
   const PATIENTS = [
     {
       id: "P-2401", initials: "김○아", dob: "2024-03-18", bed: "1번 침상", age: "2세",
-      weight: 10, measured: "오늘 07:30", medication: "교육용 흡입약 A", route: "네뷸라이저 흡입",
-      routeKey: "neb", time: "09:00", perKg: 0.2, dose: 2, maxDose: 2.5, unit: "mg",
-      tool: "네뷸라이저", concentration: "교육용 단일 용량", doses: [0.2, 2, 20],
+      weight: 10.2, measured: "오늘 07:30", medication: "교육용 흡입약 A", route: "네뷸라이저 흡입",
+      routeKey: "neb", time: "09:00", adultDose: 100, dose: 15, maxDose: 15, unit: "mg",
+      tool: "네뷸라이저", concentration: "교육용 단일 용량", doses: [0.5, 15, 150],
       monitor: "호흡수와 산소포화도를 확인했습니다."
     },
     {
       id: "P-2402", initials: "이○준", dob: "2022-11-04", bed: "2번 침상", age: "4세",
-      weight: 15, measured: "오늘 07:40", medication: "교육용 주사약 B", route: "근육주사",
-      routeKey: "im", time: "09:30", perKg: 0.1, dose: 1.5, maxDose: 2, unit: "mg",
-      tool: "근육주사용 주사기", concentration: "1 mg/mL (교육용)", doses: [0.15, 1.5, 15],
+      weight: 17, measured: "오늘 07:40", medication: "교육용 주사약 B", route: "근육주사",
+      routeKey: "im", time: "09:30", adultDose: 100, dose: 25, maxDose: 25, unit: "mg",
+      tool: "근육주사용 주사기", concentration: "10 mg/mL (교육용)", doses: [2.5, 25, 250],
       monitor: "주사 부위와 전신 반응을 확인했습니다."
     },
     {
       id: "P-2403", initials: "박○서", dob: "2020-08-22", bed: "3번 침상", age: "6세",
-      weight: 20, measured: "오늘 07:50", medication: "교육용 경구약 C", route: "경구",
-      routeKey: "po", time: "10:00", perKg: 5, dose: 100, maxDose: 120, unit: "mg",
-      tool: "경구용 약컵", concentration: "20 mg/mL (교육용)", doses: [10, 100, 1000],
+      weight: 20.4, measured: "오늘 07:50", medication: "교육용 경구약 C", route: "경구",
+      routeKey: "po", time: "10:00", adultDose: 100, dose: 30, maxDose: 30, unit: "mg",
+      tool: "경구용 약컵", concentration: "10 mg/mL (교육용)", doses: [3, 30, 300],
       monitor: "복용 여부와 삼킴 상태를 확인했습니다."
     }
   ];
@@ -33,13 +33,15 @@
     selectedPatient: 0, cardsViewed: new Set(), wristChecked: new Set(),
     weightChecked: new Set(), compared: new Set(), prepared: new Map(),
     routeErrors: 0, doseErrors: 0, wrongChoices: 0,
-    player: { x: 500, y: 560, speed: 3.7, direction: "up", moving: false },
+    player: { x: 610, y: 790, speed: 3.7, direction: "up", moving: false },
     keys: {}, lastTime: 0, nearby: null
   };
 
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
+  const wardMap = new Image();
+  wardMap.src = "assets/ward-map.jpg";
   const modalRoot = document.getElementById("modalRoot");
   const hint = document.getElementById("interactionHint");
   const toastEl = document.getElementById("toast");
@@ -47,26 +49,25 @@
   const progressValue = document.getElementById("progressValue");
 
   const obstacles = [
-    {x: 35, y: 20, w: 890, h: 38}, {x: 35, y: 20, w: 30, h: 590}, {x: 895, y: 20, w: 30, h: 590},
-    {x: 80, y: 100, w: 235, h: 120}, {x: 365, y: 100, w: 235, h: 120}, {x: 650, y: 100, w: 235, h: 120},
-    {x: 65, y: 405, w: 250, h: 120}, {x: 650, y: 400, w: 235, h: 125},
-    {x: 370, y: 286, w: 220, h: 64}
+    {x: 0, y: 0, w: 960, h: 82}, {x: 0, y: 0, w: 62, h: 960}, {x: 898, y: 0, w: 62, h: 960},
+    {x: 72, y: 475, w: 405, h: 220},
+    {x: 555, y: 405, w: 328, h: 245}
   ];
 
   const hotspots = [
-    { type: "patient", index: 0, x: 198, y: 240, radius: 68, label: "1번 침상" },
-    { type: "patient", index: 1, x: 483, y: 240, radius: 68, label: "2번 침상" },
-    { type: "patient", index: 2, x: 768, y: 240, radius: 68, label: "3번 침상" },
-    { type: "computer", x: 184, y: 550, radius: 90, label: "투약카드 컴퓨터" },
-    { type: "cabinet", x: 770, y: 550, radius: 90, label: "약품 준비대" },
-    { type: "sink", x: 480, y: 370, radius: 65, label: "손 위생대" }
+    { type: "patient", index: 0, x: 145, y: 740, radius: 78, label: "1번 침상" },
+    { type: "patient", index: 1, x: 292, y: 740, radius: 78, label: "2번 침상" },
+    { type: "patient", index: 2, x: 425, y: 740, radius: 78, label: "3번 침상" },
+    { type: "computer", x: 675, y: 690, radius: 90, label: "투약카드 컴퓨터" },
+    { type: "cabinet", x: 825, y: 690, radius: 90, label: "약품 준비대" },
+    { type: "sink", x: 545, y: 690, radius: 70, label: "손 위생대" }
   ];
 
   function resetState() {
     state.score = 100; state.completed.clear(); state.cardsViewed.clear(); state.wristChecked.clear();
     state.weightChecked.clear(); state.compared.clear(); state.prepared.clear();
     state.routeErrors = 0; state.doseErrors = 0; state.wrongChoices = 0;
-    state.player.x = 500; state.player.y = 560; state.player.direction = "up";
+    state.player.x = 610; state.player.y = 790; state.player.direction = "up";
     updateHUD(); updateTasks(); closeModal();
   }
 
@@ -99,7 +100,7 @@
     let title = `${p.bed} 투약카드를 확인하세요`;
     let desc = "간호사실 컴퓨터에서 처방 내용을 먼저 확인합니다.";
     if (state.cardsViewed.has(i)) { active = "identity"; title = `${p.bed} 환자를 확인하세요`; desc = "환자에게 말을 걸고 입원팔찌를 확인합니다."; }
-    if (state.wristChecked.has(i)) { active = "weight"; title = "체중과 적정 용량을 계산하세요"; desc = "최신 체중을 확인하고 체중당 용량을 계산합니다."; }
+    if (state.wristChecked.has(i)) { active = "weight"; title = "Clark 공식으로 용량을 계산하세요"; desc = "아동 체중과 성인 용량 100mg을 이용해 적정 용량을 계산합니다."; }
     if (state.weightChecked.has(i) && state.compared.has(i)) { active = "prepare"; title = "약물과 투약기구를 준비하세요"; desc = "약품 준비대에서 처방에 맞는 약물, 기구와 용량을 고릅니다."; }
     if (state.prepared.has(i)) { active = "admin"; title = `${p.bed}에서 최종 확인하세요`; desc = "환자 앞에서 다섯 항목을 대조한 뒤 투약합니다."; }
     if (state.completed.has(i)) {
@@ -194,11 +195,21 @@
   }
 
   function drawScene() {
-    drawFloor();
-    drawBed(80,100,0); drawBed(365,100,1); drawBed(650,100,2);
-    drawPatientLabel(125,78,PATIENTS[0],0); drawPatientLabel(410,78,PATIENTS[1],1); drawPatientLabel(695,78,PATIENTS[2],2);
-    drawNurseStation(); drawCabinet(); drawSink();
-    ctx.fillStyle="#315f64"; ctx.font="bold 12px 'Malgun Gothic'"; ctx.fillText("투약카드",145,535); ctx.fillText("약물 · 기구",742,540);
+    if (wardMap.complete && wardMap.naturalWidth) {
+      ctx.drawImage(wardMap, 0, 0, 960, 960);
+    } else {
+      ctx.fillStyle = "#ccebe3";
+      ctx.fillRect(0, 0, 960, 960);
+    }
+    hotspots.forEach(h => {
+      if (h.type === "sink") return;
+      const completed = h.type === "patient" && state.completed.has(h.index);
+      ctx.fillStyle = completed ? "rgba(20,116,95,.82)" : "rgba(22,118,197,.76)";
+      ctx.fillRect(h.x - 7, h.y - 7, 14, 14);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(h.x - 7, h.y - 7, 14, 14);
+    });
     drawPlayer();
   }
 
@@ -219,7 +230,7 @@
     if(dx<0)state.player.direction="left"; if(dx>0)state.player.direction="right"; if(dy<0)state.player.direction="up"; if(dy>0)state.player.direction="down";
     const speed=state.player.speed*Math.min(dt/16.67,2);
     const nx=Math.max(78,Math.min(882,state.player.x+dx*speed));
-    const ny=Math.max(80,Math.min(580,state.player.y+dy*speed));
+    const ny=Math.max(105,Math.min(890,state.player.y+dy*speed));
     if(!collides(nx,state.player.y))state.player.x=nx;
     if(!collides(state.player.x,ny))state.player.y=ny;
     findNearby();
@@ -264,11 +275,14 @@
   function medCardHTML(p) {
     return `<div class="med-card"><h3>${p.bed} 투약카드</h3><div class="data-grid">
       ${dataItem("환자번호",p.id)}${dataItem("환자",p.initials)}${dataItem("약물명",p.medication)}${dataItem("처방 용량",`${p.dose} ${p.unit}`)}
-      ${dataItem("투여경로",p.route)}${dataItem("투약시간",p.time)}${dataItem("최신 체중",`${p.weight} kg · ${p.measured}`)}${dataItem("기준 용량",`${p.perKg} mg/kg/dose`)}
+      ${dataItem("투여경로",p.route)}${dataItem("투약시간",p.time)}${dataItem("최신 체중",`${p.weight} kg · ${p.measured}`)}${dataItem("성인 용량",`${p.adultDose} mg`)}
       ${dataItem("1회 최대용량",`${p.maxDose} ${p.unit}`)}${dataItem("제형·농도",p.concentration)}
-    </div><span class="education-tag">교육용 가상 처방 · 실제 임상 사용 금지</span></div>`;
+    </div><div class="clark-rule"><span class="key-term">Clark's rule</span><br>(${p.weight}kg ÷ 68kg) × ${p.adultDose}mg = <span class="key-term">${p.dose}mg</span></div><span class="education-tag">교육용 가상 처방 · 실제 임상 사용 금지</span></div>`;
   }
-  function dataItem(label,value){return `<div class="data-item"><span>${label}</span><b>${value}</b></div>`;}
+  function dataItem(label,value){
+    const important=["약물명","처방 용량","투여경로","투약시간","최신 체중","성인 용량"].includes(label);
+    return `<div class="data-item"><span>${label}</span><b class="${important?"key-term":""}">${value}</b></div>`;
+  }
 
   function openMedicationCards() {
     const tabs=PATIENTS.map((p,i)=>`<button class="tab-button ${i===state.selectedPatient?"active":""}" data-patient-tab="${i}">${p.bed}</button>`).join("");
@@ -294,6 +308,7 @@
     makeDialog("BEDSIDE CHECK",`${p.bed} · ${p.initials}`,`<div class="patient-menu">
       <button class="choice-button" data-action="greet"><strong>환자에게 인사하기</strong><small>투약 전 과정을 설명합니다.</small></button>
       <button class="choice-button" data-action="wrist"><strong>입원팔찌 확인하기</strong><small>두 가지 정보로 대상자를 확인합니다.</small></button>
+      <button class="choice-button" data-action="card"><strong>투약카드 확인하기</strong><small>${state.cardsViewed.has(index)?"가지고 온 투약카드를 다시 확인합니다.":"간호사실에서 먼저 가져와야 합니다."}</small></button>
       <button class="choice-button" data-action="weight"><strong>체중·용량 확인하기</strong><small>최신 체중으로 적정 용량을 계산합니다.</small></button>
       <button class="choice-button" data-action="compare"><strong>투약정보 대조하기</strong><small>팔찌와 투약카드의 다섯 항목을 대조합니다.</small></button>
       <button class="choice-button critical" data-action="admin"><strong>투약하기</strong><small>현재 상태: ${prepared}</small></button>
@@ -306,9 +321,16 @@
     const p=PATIENTS[index];
     if(action==="greet") { showToast("안녕하세요. 투약 전 환자 정보와 처방을 확인하겠습니다."); closeModal(); }
     if(action==="wrist") openWristband(index);
+    if(action==="card") openCarriedCard(index);
     if(action==="weight") openDoseCheck(index);
     if(action==="compare") openComparison(index);
     if(action==="admin") attemptAdministration(index);
+  }
+
+  function openCarriedCard(index){
+    const p=PATIENTS[index];
+    if(!state.cardsViewed.has(index)){showToast("먼저 간호사실 컴퓨터에서 이 환자의 투약카드를 확인하고 가져오세요.",true);closeModal();return;}
+    makeDialog("MEDICATION CARD","가지고 온 투약카드",medCardHTML(p),`<button class="primary-button" data-close>확인 완료</button>`,true);
   }
 
   function openWristband(index){
@@ -322,15 +344,15 @@
     const p=PATIENTS[index];
     if(!state.cardsViewed.has(index)){showToast("먼저 간호사실에서 이 환자의 투약카드를 확인하세요.",true);closeModal();return;}
     const options=p.doses.map(d=>`<button class="answer-button" data-dose="${d}">${d} ${p.unit}</button>`).join("");
-    makeDialog("WEIGHT BASED DOSE","체중 기반 적정 용량",`<div class="calc-card">
-      <div class="data-grid">${dataItem("최신 체중",`${p.weight} kg`)}${dataItem("측정 시각",p.measured)}${dataItem("기준 용량",`${p.perKg} mg/kg/dose`)}${dataItem("1회 최대용량",`${p.maxDose} ${p.unit}`)}</div>
-      <div class="calc-equation">${p.weight} kg × ${p.perKg} mg/kg/dose = ?</div>
-      <p>계산된 적정 1회 용량을 선택하세요.</p><div class="answer-grid">${options}</div>
+    makeDialog("CLARK'S RULE","Clark 공식으로 아동 용량 계산",`<div class="calc-card">
+      <div class="data-grid">${dataItem("최신 체중",`${p.weight} kg`)}${dataItem("측정 시각",p.measured)}${dataItem("성인 평균 체중","68 kg")}${dataItem("성인 용량",`${p.adultDose} mg`)}</div>
+      <div class="clark-rule"><span class="key-term">아동 용량</span> = (아동 체중 ÷ 68kg) × 성인 용량<br>(${p.weight}kg ÷ 68kg) × ${p.adultDose}mg = ?</div>
+      <p>계산된 <span class="key-term">적정 1회 용량</span>을 선택하세요.</p><div class="answer-grid">${options}</div>
     </div>`);
     modalRoot.querySelectorAll("[data-dose]").forEach(btn=>btn.addEventListener("click",()=>{
       const answer=Number(btn.dataset.dose);
       if(answer===p.dose){state.weightChecked.add(index);showToast(`정답입니다. 적정 용량은 ${p.dose} ${p.unit}입니다.`);closeModal();}
-      else {const tenfold=answer>=p.dose*10;deduct(tenfold?10:3,"dose",tenfold?"10배 용량 오류 위험! 소수점과 단위를 다시 확인하세요.":"체중당 기준 용량을 다시 계산하세요.");}
+      else {const tenfold=answer>=p.dose*10;deduct(tenfold?10:3,"dose",tenfold?"10배 용량 오류 위험! 소수점과 단위를 다시 확인하세요.":"Clark 공식을 이용해 다시 계산하세요.");}
     }));
   }
 
