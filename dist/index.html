@@ -29,6 +29,20 @@
         <button id="pauseBtn" class="icon-button" type="button">일시정지</button>
         <button id="resetBtn" class="icon-button danger" type="button">처음부터</button>
       </div>
+      <section class="header-task" aria-label="현재 과제">
+        <div class="header-task-copy">
+          <p class="panel-label">현재 과제</p>
+          <h2 id="taskTitle">간호사실로 이동하세요</h2>
+          <p id="taskDescription">컴퓨터에서 세 환자의 투약카드를 먼저 확인합니다.</p>
+        </div>
+        <ol id="taskList" class="task-list">
+          <li data-task="cards"><span>1</span>투약카드 확인</li>
+          <li data-task="identity"><span>2</span>입원팔찌 대조</li>
+          <li data-task="weight"><span>3</span>체중·용량 확인</li>
+          <li data-task="prepare"><span>4</span>약물·기구 준비</li>
+          <li data-task="admin"><span>5</span>최종 확인·투약</li>
+        </ol>
+      </section>
     </header>
 
     <section class="game-layout">
@@ -47,11 +61,34 @@
         </div>
       </aside>
 
-      <div class="game-stage" id="gameStage">
-        <canvas id="gameCanvas" width="960" height="960" aria-label="제공된 픽셀 병실을 배경으로 한 소아병동 시뮬레이션 게임 화면"></canvas>
-        <div id="interactionHint" class="interaction-hint" hidden>E 상호작용</div>
-        <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+      <div class="game-column">
+        <div class="game-stage" id="gameStage">
+          <canvas id="gameCanvas" width="960" height="960" aria-label="제공된 픽셀 병실을 배경으로 한 소아병동 시뮬레이션 게임 화면"></canvas>
+          <div id="interactionHint" class="interaction-hint" hidden>E 상호작용</div>
+          <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
+          <div id="startScreen" class="screen-layer start-screen">
+            <div class="start-card">
+              <div class="mini-cross" aria-hidden="true">+</div>
+              <p class="eyebrow">PEDIATRIC MED SAFETY</p>
+              <h1>투약 전, 한 번 더 확인</h1>
+              <p>세 명의 소아 환자를 만나 팔찌, 투약카드, 체중, 용량과 투여경로를 확인하세요.</p>
+              <div class="learning-path">
+                <span>환자 확인</span><i></i><span>용량 계산</span><i></i><span>안전 투약</span>
+              </div>
+              <button id="startBtn" class="primary-button" type="button">시뮬레이션 시작</button>
+              <small>게임 속 약물과 용량은 교육용 가상 자료입니다.</small>
+            </div>
+          </div>
+
+          <div id="pauseScreen" class="screen-layer pause-screen" hidden>
+            <div class="pause-card">
+              <p class="eyebrow">PAUSED</p>
+              <h2>잠시 멈췄습니다</h2>
+              <button id="resumeBtn" class="primary-button" type="button">계속하기</button>
+            </div>
+          </div>
+        </div>
         <div id="mobileControls" class="mobile-controls" aria-label="모바일 게임 조작">
           <div class="touch-dpad" aria-label="이동 방향키">
             <button type="button" class="touch-key up" data-move-key="ArrowUp" aria-label="위로 이동">▲</button>
@@ -61,46 +98,7 @@
           </div>
           <button id="mobileInteract" class="touch-action" type="button">확인</button>
         </div>
-
-        <div id="startScreen" class="screen-layer start-screen">
-          <div class="start-card">
-            <div class="mini-cross" aria-hidden="true">+</div>
-            <p class="eyebrow">PEDIATRIC MED SAFETY</p>
-            <h1>투약 전, 한 번 더 확인</h1>
-            <p>세 명의 소아 환자를 만나 팔찌, 투약카드, 체중, 용량과 투여경로를 확인하세요.</p>
-            <div class="learning-path">
-              <span>환자 확인</span><i></i><span>용량 계산</span><i></i><span>안전 투약</span>
-            </div>
-            <button id="startBtn" class="primary-button" type="button">시뮬레이션 시작</button>
-            <small>게임 속 약물과 용량은 교육용 가상 자료입니다.</small>
-          </div>
-        </div>
-
-        <div id="pauseScreen" class="screen-layer pause-screen" hidden>
-          <div class="pause-card">
-            <p class="eyebrow">PAUSED</p>
-            <h2>잠시 멈췄습니다</h2>
-            <button id="resumeBtn" class="primary-button" type="button">계속하기</button>
-          </div>
-        </div>
       </div>
-
-      <aside class="side-panel task-panel">
-        <p class="panel-label">현재 과제</p>
-        <h2 id="taskTitle">간호사실로 이동하세요</h2>
-        <p id="taskDescription">컴퓨터에서 세 환자의 투약카드를 먼저 확인합니다.</p>
-        <ol id="taskList" class="task-list">
-          <li data-task="cards"><span>1</span>투약카드 확인</li>
-          <li data-task="identity"><span>2</span>입원팔찌 대조</li>
-          <li data-task="weight"><span>3</span>체중·용량 확인</li>
-          <li data-task="prepare"><span>4</span>약물·기구 준비</li>
-          <li data-task="admin"><span>5</span>최종 확인·투약</li>
-        </ol>
-        <div class="safety-note">
-          <strong>안전 원칙</strong>
-          <p>경로가 바뀌면 적정 용량도 달라질 수 있습니다.</p>
-        </div>
-      </aside>
     </section>
   </main>
 
