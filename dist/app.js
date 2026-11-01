@@ -30,7 +30,7 @@
 
   const state = {
     started: false, paused: false, score: 100, completed: new Set(),
-    selectedPatient: 0, cardsViewed: new Set(), wristChecked: new Set(),
+    selectedPatient: 0, cardsViewed: new Set(), wristChecked: new Set(), handHygiene: new Set(),
     weightChecked: new Set(), compared: new Set(), prepared: new Map(),
     routeErrors: 0, doseErrors: 0, wrongChoices: 0,
     player: { x: 610, y: 790, speed: 3.7, direction: "up", moving: false },
@@ -61,12 +61,11 @@
     { type: "patient", index: 1, x: 292, y: 740, radius: 78, label: "2번 침상" },
     { type: "patient", index: 2, x: 425, y: 740, radius: 78, label: "3번 침상" },
     { type: "computer", x: 675, y: 690, radius: 90, label: "투약카드 컴퓨터" },
-    { type: "cabinet", x: 825, y: 690, radius: 90, label: "약품 준비대" },
-    { type: "sink", x: 545, y: 690, radius: 70, label: "손 위생대" }
+    { type: "cabinet", x: 825, y: 690, radius: 90, label: "약품 준비대" }
   ];
 
   function resetState() {
-    state.score = 100; state.completed.clear(); state.cardsViewed.clear(); state.wristChecked.clear();
+    state.score = 100; state.completed.clear(); state.cardsViewed.clear(); state.wristChecked.clear(); state.handHygiene.clear();
     state.weightChecked.clear(); state.compared.clear(); state.prepared.clear();
     state.routeErrors = 0; state.doseErrors = 0; state.wrongChoices = 0;
     state.player.x = 610; state.player.y = 790; state.player.direction = "up";
@@ -201,7 +200,6 @@
       ctx.fillRect(0, 0, 960, 960);
     }
     hotspots.forEach(h => {
-      if (h.type === "sink") return;
       const completed = h.type === "patient" && state.completed.has(h.index);
       ctx.fillStyle = completed ? "rgba(20,116,95,.82)" : "rgba(22,118,197,.76)";
       ctx.fillRect(h.x - 7, h.y - 7, 14, 14);
@@ -254,7 +252,6 @@
     if(h.type==="computer")openMedicationCards();
     if(h.type==="cabinet")openPreparation();
     if(h.type==="patient")openPatientMenu(h.index);
-    if(h.type==="sink")showToast("손 위생을 시행했습니다. 투약 준비를 계속하세요.");
   }
 
   function makeDialog(kicker,title,body,footer="",wide=false) {
@@ -350,6 +347,7 @@
             <button class="bedside-close" data-close type="button" aria-label="침상 대화 닫기">×</button>
           </header>
           <div class="bedside-actions">
+            <button class="bedside-action ${state.handHygiene.has(index)?"completed":""}" data-action="hand" type="button"><strong>손 위생</strong> 시행하기</button>
             <button class="bedside-action" data-action="greet" type="button">환자에게 인사하기</button>
             <button class="bedside-action" data-action="wrist" type="button"><strong>입원팔찌</strong> 확인하기</button>
             <button class="bedside-action" data-action="card" type="button"><strong>투약카드</strong> 확인하기</button>
@@ -358,13 +356,14 @@
             <button class="bedside-action" data-action="admin" type="button"><strong>투약</strong>하기</button>
             <button class="bedside-action cancel" data-action="cancel" type="button">취소하기</button>
           </div>
-          <div class="bedside-status">투약카드: <strong>${state.cardsViewed.has(index)?"확인함":"미확인"}</strong> · 약물 준비: <strong>${prepared}</strong></div>
+          <div class="bedside-status" id="bedsideStatus">손 위생: <strong>${state.handHygiene.has(index)?"시행함":"미시행"}</strong> · 투약카드: <strong>${state.cardsViewed.has(index)?"확인함":"미확인"}</strong> · 약물 준비: <strong>${prepared}</strong></div>
         </div>
       </section>
     </div>`;
     modalRoot.hidden=false;
     modalRoot.querySelectorAll("[data-close]").forEach(btn=>btn.addEventListener("click",closeModal));
     const actionMessages={
+      hand:{text:"손 위생을 시행한다!",keys:["손 위생"]},
       greet:{text:"안녕하세요. 투약 전 안전 확인을 시행하겠습니다!",keys:["투약 전 안전 확인"]},
       wrist:{text:"입원팔찌를 확인한다!",keys:["입원팔찌"]},
       card:{text:"투약카드를 확인한다!",keys:["투약카드"]},
@@ -379,6 +378,13 @@
       const action=btn.dataset.action;
       const content=actionMessages[action];
       typeBedsideMessage(content.text,content.keys);
+      if(action==="hand"){
+        state.handHygiene.add(index);
+        btn.classList.add("completed");
+        const status=modalRoot.querySelector("#bedsideStatus");
+        if(status)status.innerHTML=`손 위생: <strong>시행함</strong> · 투약카드: <strong>${state.cardsViewed.has(index)?"확인함":"미확인"}</strong> · 약물 준비: <strong>${prepared}</strong>`;
+        return;
+      }
       if(action==="greet")return;
       if(action==="cancel"){bedsideActionTimer=setTimeout(closeModal,700);return;}
       bedsideActionTimer=setTimeout(()=>patientAction(index,action),900);
@@ -470,6 +476,7 @@
   function attemptAdministration(index){
     const p=PATIENTS[index];
     const missing=[];
+    if(!state.handHygiene.has(index))missing.push("손 위생");
     if(!state.cardsViewed.has(index))missing.push("투약카드");
     if(!state.wristChecked.has(index))missing.push("입원팔찌");
     if(!state.weightChecked.has(index))missing.push("체중·용량 계산");

@@ -285,6 +285,14 @@ kbd {
 }
 .bedside-action:hover,
 .bedside-action.selected { border-color: #1676c5; background: #edf7ff; }
+.bedside-action.completed { border-color: #247f52; background: #e8f7ed; }
+.bedside-action.completed::after {
+  content: "완료";
+  margin-left: auto;
+  color: #247f52;
+  font-size: 11px;
+  font-weight: 900;
+}
 .bedside-action:active { transform: translateY(2px); box-shadow: 0 1px 0 #3d7a3d; }
 .bedside-action::before {
   content: "";
