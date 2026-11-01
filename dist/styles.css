@@ -33,6 +33,42 @@ body {
     repeating-linear-gradient(90deg, #cce7e1 0 1px, transparent 1px 24px),
     #e8f5f1;
 }
+body.cover-open { overflow: hidden; }
+
+.app-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: hidden;
+  background: #71c5ef;
+}
+.app-cover > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  image-rendering: pixelated;
+}
+.cover-enter-button {
+  position: absolute;
+  left: max(28px, env(safe-area-inset-left));
+  bottom: max(28px, env(safe-area-inset-bottom));
+  min-width: 230px;
+  padding: 16px 24px;
+  border: 4px solid #052c57;
+  border-radius: 12px;
+  color: #052c57;
+  background: #68f4d0;
+  box-shadow: 0 6px 0 #052c57, 0 12px 28px rgba(2,31,62,.3);
+  font-size: clamp(18px, 2vw, 25px);
+  font-weight: 900;
+  letter-spacing: -.03em;
+  text-shadow: 0 1px #fff;
+}
+.cover-enter-button:hover { filter: brightness(1.08); }
+.cover-enter-button:active { transform: translateY(4px); box-shadow: 0 2px 0 #052c57, 0 7px 18px rgba(2,31,62,.25); }
+.cover-enter-button:focus-visible { outline: 4px solid #fff; outline-offset: 4px; }
 
 button, input { font: inherit; }
 button { cursor: pointer; }
@@ -517,6 +553,14 @@ kbd {
 }
 
 @media (max-width: 620px) {
+  .app-cover > img { object-position: center; }
+  .cover-enter-button {
+    left: 16px;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    min-width: 190px;
+    padding: 13px 18px;
+    border-width: 3px;
+  }
   .topbar { display: grid; }
   .status-strip { justify-content: flex-start; }
   .icon-button { padding: 8px; font-size: 11px; }
