@@ -543,7 +543,9 @@
   document.getElementById("enterSimulation").addEventListener("click",()=>{
     document.getElementById("appCover").hidden=true;
     document.body.classList.remove("cover-open");
-    document.getElementById("startBtn").focus();
+    state.started=true;
+    document.getElementById("startScreen").hidden=true;
+    showToast("간호사실 컴퓨터에서 투약카드를 확인하세요.");
   });
 
   document.getElementById("startBtn").addEventListener("click",()=>{
