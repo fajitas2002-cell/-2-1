@@ -42,6 +42,8 @@
   ctx.imageSmoothingEnabled = false;
   const wardMap = new Image();
   wardMap.src = "assets/ward-map.jpg";
+  const playerSprite = new Image();
+  playerSprite.src = "assets/player-nurse.png";
   const modalRoot = document.getElementById("modalRoot");
   const hint = document.getElementById("interactionHint");
   const toastEl = document.getElementById("toast");
@@ -183,20 +185,17 @@
     const bob=moving?Math.sin(performance.now()/80)*2:0;
     ctx.save(); ctx.translate(Math.round(x),Math.round(y+bob));
     ctx.fillStyle="rgba(25,58,69,.18)"; ctx.fillRect(-15,17,30,8);
-    ctx.fillStyle="#f2c3a0"; ctx.fillRect(-10,-20,20,18);
-    ctx.fillStyle="#714a38"; ctx.fillRect(-13,-25,26,9); ctx.fillRect(-13,-18,5,10);
-    ctx.fillStyle="#fff"; ctx.fillRect(-15,-34,30,10);
-    ctx.fillStyle="#db5d5d"; ctx.fillRect(-3,-34,6,10); ctx.fillRect(-7,-30,14,4);
-    ctx.fillStyle="#f6fcfb"; ctx.fillRect(-14,-2,28,26);
-    ctx.fillStyle="#df6267"; ctx.fillRect(-7,0,14,20);
-    ctx.fillStyle="#315f64"; ctx.fillRect(-14,21,10,10); ctx.fillRect(4,21,10,10);
-    ctx.strokeStyle="#28474d"; ctx.lineWidth=3; ctx.strokeRect(-15,-2,30,26);
+    if(playerSprite.complete&&playerSprite.naturalWidth){
+      ctx.drawImage(playerSprite,-29,-43,58,60);
+    }
     ctx.restore();
   }
 
   function drawScene() {
     if (wardMap.complete && wardMap.naturalWidth) {
       ctx.drawImage(wardMap, 0, 0, 960, 960);
+      // 원본 배경에 포함된 의사 캐릭터 영역을 같은 위상의 빈 바닥 타일로 복원한다.
+      ctx.drawImage(ctx.canvas, 437, 690, 82, 94, 565, 690, 82, 94);
     } else {
       ctx.fillStyle = "#ccebe3";
       ctx.fillRect(0, 0, 960, 960);
