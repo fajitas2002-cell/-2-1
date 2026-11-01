@@ -11,7 +11,10 @@
 <body class="cover-open">
   <section id="appCover" class="app-cover" aria-label="DOSEVERSE 앱 표지">
     <img src="assets/app-cover.jpg" alt="DOSEVERSE 간호 투약 시뮬레이션 표지">
-    <button id="enterSimulation" class="cover-enter-button" type="button">투약 시뮬레이션</button>
+    <div class="cover-actions">
+      <button id="enterSimulation" class="cover-enter-button" type="button">투약 시뮬레이션</button>
+      <button id="enterYakAnsim" class="cover-enter-button cover-yak-button" type="button">약 안심</button>
+    </div>
   </section>
 
   <main class="app-shell">
@@ -27,6 +30,7 @@
         <span>점수 <b id="scoreValue">100</b></span>
         <span>완료 <b id="progressValue">0 / 3</b></span>
         <button id="pauseBtn" class="icon-button" type="button">일시정지</button>
+        <button id="openYakAnsim" class="icon-button yak-button" type="button">약 안심</button>
         <button id="resetBtn" class="icon-button danger" type="button">처음부터</button>
       </div>
       <section class="header-task" aria-label="현재 과제">

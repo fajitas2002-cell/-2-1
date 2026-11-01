@@ -571,6 +571,46 @@
     if(Date.now()-mobileInteractHandledAt>600)interact();
   });
 
+  function openYakAnsim(){
+    const linkedPatients=PATIENTS.map((patient,index)=>({
+      id:patient.id,
+      initials:patient.initials,
+      bed:patient.bed,
+      age:patient.age,
+      dob:patient.dob,
+      weight:patient.weight,
+      measured:patient.measured,
+      medication:patient.medication,
+      dose:patient.dose,
+      unit:patient.unit,
+      maxDose:patient.maxDose,
+      adultDose:patient.adultDose,
+      route:patient.route,
+      routeKey:patient.routeKey,
+      time:patient.time,
+      tool:patient.tool,
+      concentration:patient.concentration,
+      checks:{
+        card:state.cardsViewed.has(index),
+        wrist:state.wristChecked.has(index),
+        weight:state.weightChecked.has(index),
+        compared:state.compared.has(index),
+        prepared:state.prepared.has(index),
+        completed:state.completed.has(index)
+      }
+    }));
+    try{
+      localStorage.setItem("doseverseYakAnsimPatients",JSON.stringify(linkedPatients));
+      localStorage.setItem("doseverseYakAnsimUpdatedAt",new Date().toISOString());
+    }catch(error){
+      console.warn("약 안심 연동 데이터를 저장하지 못했습니다.",error);
+    }
+    window.location.href="yak-ansim/index.html";
+  }
+
+  document.getElementById("enterYakAnsim").addEventListener("click",openYakAnsim);
+  document.getElementById("openYakAnsim").addEventListener("click",openYakAnsim);
+
   document.getElementById("enterSimulation").addEventListener("click",()=>{
     document.getElementById("appCover").hidden=true;
     document.body.classList.remove("cover-open");

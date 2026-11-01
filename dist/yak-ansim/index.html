@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="개인정보 없이 선택한 의약품의 DUR 금기와 주의 정보를 확인하는 프로토타입">
+  <meta name="theme-color" content="#1468c3">
+  <title>약안심 DUR 체크</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">본문 바로가기</a>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="#" aria-label="약안심 홈">
+        <span class="brand-mark" aria-hidden="true">+</span>
+        <span><strong>약안심</strong><small>DUR 안전점검</small></span>
+      </a>
+      <div class="header-actions">
+        <div class="privacy-badge"><span aria-hidden="true">●</span> 개인정보 저장 안 함</div>
+        <a class="back-button" href="../index.html">시뮬레이션으로 돌아가기</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">복용 전 1분 확인</p>
+        <h1 id="page-title">함께 먹는 약,<br>위험 신호를 확인하세요</h1>
+        <p class="intro-copy">복용 중인 의약품을 직접 선택하면 병용금기, 연령·임부금기와 용량·기간 주의정보를 한 화면에서 확인합니다.</p>
+      </div>
+      <div class="intro-note">
+        <strong>이 서비스는 진료를 대신하지 않습니다.</strong>
+        <span>결과가 있어도 임의로 복용을 중단하지 말고 의사·약사와 상담하세요.</span>
+      </div>
+    </section>
+
+    <section class="patient-link" aria-labelledby="patient-link-title">
+      <div class="section-heading">
+        <span class="step">P</span>
+        <div><h2 id="patient-link-title">시뮬레이션 환자 연동</h2><p>침상 환자를 선택하면 처방과 소아 안전정보가 자동으로 입력됩니다.</p></div>
+      </div>
+      <div id="linked-patient-list" class="linked-patient-list"></div>
+      <div id="linked-patient-detail" class="linked-patient-detail" hidden></div>
+    </section>
+
+    <section class="checker" aria-label="의약품 안전점검">
+      <div class="search-panel">
+        <div class="section-heading">
+          <span class="step">1</span>
+          <div><h2>복용약 검색</h2><p>제품명이나 성분명을 입력하세요.</p></div>
+        </div>
+        <form id="search-form" class="search-form" role="search">
+          <label class="sr-only" for="drug-search">의약품 검색</label>
+          <input id="drug-search" type="search" autocomplete="off" placeholder="예: 슈다페드정, 타이레놀, 에페드린">
+          <button type="submit">검색</button>
+        </form>
+        <div class="quick-search" aria-label="빠른 검색어">
+          <span>빠른 검색</span>
+          <button type="button" data-query="슈다페드">슈다페드</button>
+          <button type="button" data-query="타이레놀">타이레놀</button>
+          <button type="button" data-query="코푸">코푸</button>
+        </div>
+        <div id="search-status" class="sr-only" aria-live="polite"></div>
+        <div id="search-results" class="search-results"></div>
+      </div>
+
+      <aside class="basket-panel" aria-labelledby="basket-title">
+        <div class="section-heading">
+          <span class="step">2</span>
+          <div><h2 id="basket-title">선택한 약</h2><p id="basket-count">0개 선택</p></div>
+        </div>
+        <div id="basket-empty" class="empty-state">
+          <div class="empty-symbol" aria-hidden="true">Rx</div>
+          <strong>아직 선택한 약이 없습니다</strong>
+          <span>왼쪽 검색 결과에서 복용 중인 제품을 추가하세요.</span>
+        </div>
+        <ol id="basket-list" class="basket-list"></ol>
+        <button id="check-button" class="check-button" type="button" disabled>안전정보 점검하기</button>
+      </aside>
+    </section>
+
+    <section id="result-section" class="results" aria-labelledby="result-title" hidden>
+      <div class="result-header">
+        <div>
+          <p class="eyebrow">점검 결과</p>
+          <h2 id="result-title">확인이 필요한 정보가 <span id="result-total">0</span>건 있습니다</h2>
+        </div>
+        <button id="reset-button" class="text-button" type="button">처음부터 다시</button>
+      </div>
+
+      <div id="summary-banner" class="summary-banner" role="status"></div>
+      <div id="category-tabs" class="category-tabs" role="tablist" aria-label="위험정보 분류"></div>
+      <div id="result-detail" class="result-detail"></div>
+
+      <div class="safety-callout">
+        <div class="callout-icon" aria-hidden="true">!</div>
+        <div><strong>결과를 이렇게 활용하세요</strong><p>이 화면을 의사 또는 약사에게 보여주세요. 금기·주의 정보가 있더라도 환자 상태와 치료 목적에 따라 처방될 수 있습니다.</p></div>
+      </div>
+    </section>
+
+    <section class="how-it-works" aria-labelledby="how-title">
+      <h2 id="how-title">어떤 정보를 확인하나요?</h2>
+      <div class="info-grid">
+        <article><strong>같이 먹어도 되는지</strong><p>선택한 약들의 성분 조합에서 병용금기와 동일성분 중복을 확인합니다.</p></article>
+        <article><strong>나에게 맞는 약인지</strong><p>임부, 특정 연령과 노인 대상 금기·주의사항을 분리해서 보여줍니다.</p></article>
+        <article><strong>복용량과 기간이 적절한지</strong><p>허가정보에 따른 최대 용량과 권장 투여기간 주의사항을 확인합니다.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <strong>약안심 DUR 체크</strong>
+      <p>식품의약품안전처 DUR 공개정보 연계를 위한 비식별 프로토타입</p>
+      <p class="source-note">현재 화면은 기능 확인용 예시 데이터로 동작합니다. 실제 서비스 전환 시 공식 OpenAPI 최신 데이터 검증이 필요합니다.</p>
+    </div>
+  </footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js"></script>
+</body>
+</html>
