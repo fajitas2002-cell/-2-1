@@ -270,7 +270,42 @@
     modalRoot.querySelector(".dialog")?.focus();
   }
 
-  function closeModal(){modalRoot.hidden=true;modalRoot.innerHTML="";updateTasks();}
+  let bedsideTypeTimer;
+  let bedsideActionTimer;
+
+  function closeModal(){
+    clearInterval(bedsideTypeTimer);
+    clearTimeout(bedsideActionTimer);
+    modalRoot.hidden=true;
+    modalRoot.innerHTML="";
+    updateTasks();
+  }
+
+  function escapeHTML(value){
+    return String(value).replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"})[char]);
+  }
+
+  function highlightMessage(value,keywords=[]){
+    let result=escapeHTML(value);
+    keywords.forEach(keyword=>{
+      const safe=escapeHTML(keyword);
+      result=result.replace(safe,`<span class="key-term">${safe}</span>`);
+    });
+    return result;
+  }
+
+  function typeBedsideMessage(message,keywords=[]){
+    const target=modalRoot.querySelector("#bedsideMessage");
+    if(!target)return;
+    clearInterval(bedsideTypeTimer);
+    let index=0;
+    target.innerHTML="";
+    bedsideTypeTimer=setInterval(()=>{
+      index+=1;
+      target.innerHTML=highlightMessage(message.slice(0,index),keywords);
+      if(index>=message.length)clearInterval(bedsideTypeTimer);
+    },32);
+  }
 
   function medCardHTML(p) {
     return `<div class="med-card"><h3>${p.bed} 투약카드</h3><div class="data-grid">
@@ -305,21 +340,55 @@
   function openPatientMenu(index) {
     state.selectedPatient=index; const p=PATIENTS[index];
     const prepared=state.prepared.has(index)?"준비 완료":"아직 준비하지 않음";
-    makeDialog("BEDSIDE CHECK",`${p.bed} · ${p.initials}`,`<div class="patient-menu">
-      <button class="choice-button" data-action="greet"><strong>환자에게 인사하기</strong><small>투약 전 과정을 설명합니다.</small></button>
-      <button class="choice-button" data-action="wrist"><strong>입원팔찌 확인하기</strong><small>두 가지 정보로 대상자를 확인합니다.</small></button>
-      <button class="choice-button" data-action="card"><strong>투약카드 확인하기</strong><small>${state.cardsViewed.has(index)?"가지고 온 투약카드를 다시 확인합니다.":"간호사실에서 먼저 가져와야 합니다."}</small></button>
-      <button class="choice-button" data-action="weight"><strong>체중·용량 확인하기</strong><small>최신 체중으로 적정 용량을 계산합니다.</small></button>
-      <button class="choice-button" data-action="compare"><strong>투약정보 대조하기</strong><small>팔찌와 투약카드의 다섯 항목을 대조합니다.</small></button>
-      <button class="choice-button critical" data-action="admin"><strong>투약하기</strong><small>현재 상태: ${prepared}</small></button>
-      <button class="choice-button" data-close><strong>취소하기</strong><small>병실로 돌아갑니다.</small></button>
-    </div>`);
-    modalRoot.querySelectorAll("[data-action]").forEach(btn=>btn.addEventListener("click",()=>patientAction(index,btn.dataset.action)));
+    modalRoot.innerHTML=`<div class="bedside-backdrop">
+      <section class="bedside-dialog" role="dialog" aria-modal="true" aria-labelledby="bedsideTitle">
+        <div class="bedside-scene" role="img" aria-label="간호사가 침상에 있는 대상자와 대화하는 장면">
+          <div class="bedside-message" id="bedsideMessage" aria-live="polite">대상자에게&nbsp;<span class="key-term">투약 전 안전 확인</span>을 시행한다!</div>
+        </div>
+        <div class="bedside-menu">
+          <header class="bedside-menu-header">
+            <div><h2 id="bedsideTitle">${p.bed} · ${p.initials}</h2><p>시행할 간호 활동을 선택하세요.</p></div>
+            <button class="bedside-close" data-close type="button" aria-label="침상 대화 닫기">×</button>
+          </header>
+          <div class="bedside-actions">
+            <button class="bedside-action" data-action="greet" type="button">환자에게 인사하기</button>
+            <button class="bedside-action" data-action="wrist" type="button"><strong>입원팔찌</strong> 확인하기</button>
+            <button class="bedside-action" data-action="card" type="button"><strong>투약카드</strong> 확인하기</button>
+            <button class="bedside-action" data-action="weight" type="button"><strong>체중·용량</strong> 확인하기</button>
+            <button class="bedside-action" data-action="compare" type="button"><strong>투약정보</strong> 대조하기</button>
+            <button class="bedside-action" data-action="admin" type="button"><strong>투약</strong>하기</button>
+            <button class="bedside-action cancel" data-action="cancel" type="button">취소하기</button>
+          </div>
+          <div class="bedside-status">투약카드: <strong>${state.cardsViewed.has(index)?"확인함":"미확인"}</strong> · 약물 준비: <strong>${prepared}</strong></div>
+        </div>
+      </section>
+    </div>`;
+    modalRoot.hidden=false;
+    modalRoot.querySelectorAll("[data-close]").forEach(btn=>btn.addEventListener("click",closeModal));
+    const actionMessages={
+      greet:{text:"안녕하세요. 투약 전 안전 확인을 시행하겠습니다!",keys:["투약 전 안전 확인"]},
+      wrist:{text:"입원팔찌를 확인한다!",keys:["입원팔찌"]},
+      card:{text:"투약카드를 확인한다!",keys:["투약카드"]},
+      weight:{text:"체중과 약물 용량을 확인한다!",keys:["체중","약물 용량"]},
+      compare:{text:"입원팔찌와 투약카드의 정보를 대조한다!",keys:["입원팔찌","투약카드"]},
+      admin:{text:"최종 안전 확인 후 투약한다!",keys:["최종 안전 확인","투약"]},
+      cancel:{text:"침상 확인을 취소하고 병실로 돌아간다!",keys:["취소"]}
+    };
+    modalRoot.querySelectorAll("[data-action]").forEach(btn=>btn.addEventListener("click",()=>{
+      clearTimeout(bedsideActionTimer);
+      modalRoot.querySelectorAll("[data-action]").forEach(item=>item.classList.toggle("selected",item===btn));
+      const action=btn.dataset.action;
+      const content=actionMessages[action];
+      typeBedsideMessage(content.text,content.keys);
+      if(action==="greet")return;
+      if(action==="cancel"){bedsideActionTimer=setTimeout(closeModal,700);return;}
+      bedsideActionTimer=setTimeout(()=>patientAction(index,action),900);
+    }));
   }
 
   function patientAction(index,action){
     const p=PATIENTS[index];
-    if(action==="greet") { showToast("안녕하세요. 투약 전 환자 정보와 처방을 확인하겠습니다."); closeModal(); }
+    if(action==="greet") { showToast("안녕하세요. 투약 전 환자 정보와 처방을 확인하겠습니다."); }
     if(action==="wrist") openWristband(index);
     if(action==="card") openCarriedCard(index);
     if(action==="weight") openDoseCheck(index);
@@ -442,6 +511,28 @@
   });
   document.addEventListener("keyup",e=>{state.keys[e.code]=false;});
   window.addEventListener("blur",()=>{state.keys={};});
+
+  document.querySelectorAll("[data-move-key]").forEach(button=>{
+    const key=button.dataset.moveKey;
+    const press=event=>{
+      event.preventDefault();
+      state.keys[key]=true;
+      if(button.setPointerCapture&&event.pointerId!==undefined)button.setPointerCapture(event.pointerId);
+    };
+    const release=event=>{
+      event.preventDefault();
+      state.keys[key]=false;
+    };
+    button.addEventListener("pointerdown",press);
+    button.addEventListener("pointerup",release);
+    button.addEventListener("pointercancel",release);
+    button.addEventListener("lostpointercapture",release);
+    button.addEventListener("contextmenu",event=>event.preventDefault());
+  });
+  document.getElementById("mobileInteract").addEventListener("pointerdown",event=>{
+    event.preventDefault();
+    interact();
+  });
 
   document.getElementById("startBtn").addEventListener("click",()=>{
     state.started=true; document.getElementById("startScreen").hidden=true;
