@@ -7,7 +7,7 @@
       weight: 10.2, measured: "오늘 07:30", medication: "교육용 흡입약 A", route: "네뷸라이저 흡입",
       routeKey: "neb", time: "09:00", adultDose: 100, dose: 15, maxDose: 15, unit: "mg",
       tool: "네뷸라이저", concentration: "교육용 단일 용량", doses: [0.5, 15, 150],
-      sceneImage: "assets/patient-1.png",
+      sceneImage: "assets/patient-scene-1.png",
       monitor: "호흡수와 산소포화도를 확인했습니다."
     },
     {
@@ -15,7 +15,7 @@
       weight: 17, measured: "오늘 07:40", medication: "교육용 주사약 B", route: "근육주사",
       routeKey: "im", time: "09:30", adultDose: 100, dose: 25, maxDose: 25, unit: "mg",
       tool: "근육주사용 주사기", concentration: "10 mg/mL (교육용)", doses: [2.5, 25, 250],
-      sceneImage: "assets/patient-2.png",
+      sceneImage: "assets/patient-scene-2.png",
       monitor: "주사 부위와 전신 반응을 확인했습니다."
     },
     {
@@ -23,7 +23,7 @@
       weight: 20.4, measured: "오늘 07:50", medication: "교육용 경구약 C", route: "경구",
       routeKey: "po", time: "10:00", adultDose: 100, dose: 30, maxDose: 30, unit: "mg",
       tool: "경구용 약컵", concentration: "10 mg/mL (교육용)", doses: [3, 30, 300],
-      sceneImage: "assets/patient-3.png",
+      sceneImage: "assets/patient-scene-3.png",
       monitor: "복용 여부와 삼킴 상태를 확인했습니다."
     }
   ];
