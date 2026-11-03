@@ -84,7 +84,7 @@
   const backgroundMusic = document.getElementById("backgroundMusic");
   const musicToggle = document.getElementById("musicToggle");
   const musicVolume = document.getElementById("musicVolume");
-  const MUSIC_TRACKS = {cover:"assets/music-cover.mp4",game:"assets/music-game.mp4",bedside:"assets/music-bedside.mp4"};
+  const MUSIC_TRACKS = {cover:"assets/music-cover.m4a",game:"assets/music-game.m4a",bedside:"assets/music-bedside.m4a"};
   const musicState = {track:"cover",muted:false,volume:.45,unlocked:false};
 
   function updateMusicControls(){
