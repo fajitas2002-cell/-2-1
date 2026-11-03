@@ -81,6 +81,61 @@
   const toastEl = document.getElementById("toast");
   const scoreValue = document.getElementById("scoreValue");
   const progressValue = document.getElementById("progressValue");
+  const backgroundMusic = document.getElementById("backgroundMusic");
+  const musicToggle = document.getElementById("musicToggle");
+  const musicVolume = document.getElementById("musicVolume");
+  const MUSIC_TRACKS = {cover:"assets/music-cover.mp4",game:"assets/music-game.mp4",bedside:"assets/music-bedside.mp4"};
+  const musicState = {track:"cover",muted:false,volume:.45,unlocked:false};
+
+  function updateMusicControls(){
+    const icon=musicToggle.querySelector("span");
+    const silent=musicState.muted||musicState.volume===0;
+    icon.textContent=silent?"🔇":musicState.volume<.5?"🔉":"🔊";
+    musicToggle.setAttribute("aria-pressed",String(silent));
+    musicToggle.setAttribute("aria-label",silent?"배경음악 켜기":"배경음악 끄기");
+    musicToggle.classList.toggle("muted",silent);
+  }
+
+  function playCurrentMusic(){
+    if(musicState.muted||musicState.volume===0)return;
+    backgroundMusic.volume=musicState.volume;
+    const promise=backgroundMusic.play();
+    if(promise)promise.then(()=>{musicState.unlocked=true;}).catch(()=>{});
+  }
+
+  function switchMusic(track){
+    if(!MUSIC_TRACKS[track])return;
+    if(musicState.track!==track){
+      musicState.track=track;
+      backgroundMusic.src=MUSIC_TRACKS[track];
+      backgroundMusic.load();
+    }
+    playCurrentMusic();
+  }
+
+  musicToggle.addEventListener("click",()=>{
+    musicState.muted=!musicState.muted;
+    backgroundMusic.muted=musicState.muted;
+    if(!musicState.muted)playCurrentMusic();
+    updateMusicControls();
+  });
+  musicVolume.addEventListener("input",()=>{
+    musicState.volume=Number(musicVolume.value)/100;
+    backgroundMusic.volume=musicState.volume;
+    if(musicState.volume>0){musicState.muted=false;backgroundMusic.muted=false;playCurrentMusic();}
+    else backgroundMusic.pause();
+    updateMusicControls();
+  });
+  musicVolume.addEventListener("input",()=>{
+    musicState.volume=Number(musicVolume.value)/100;
+    backgroundMusic.volume=musicState.volume;
+    if(musicState.volume>0&&musicState.muted){musicState.muted=false;backgroundMusic.muted=false;}
+    if(musicState.volume>0&&backgroundMusic.paused)playCurrentMusic();
+    updateMusicControls();
+  });
+  document.addEventListener("pointerdown",()=>playCurrentMusic(),{once:true});
+  updateMusicControls();
+  playCurrentMusic();
 
   const obstacles = [
     {x: 0, y: 0, w: 960, h: 82}, {x: 0, y: 0, w: 62, h: 960}, {x: 898, y: 0, w: 62, h: 960},
@@ -309,6 +364,7 @@
     clearTimeout(bedsideInputTimer);
     modalRoot.hidden=true;
     modalRoot.innerHTML="";
+    if(state.started)switchMusic("game");
     updateTasks();
   }
 
@@ -391,6 +447,7 @@
   }
 
   function openPatientMenu(index) {
+    switchMusic("bedside");
     state.selectedPatient=index; const p=PATIENTS[index];
     const prepared=state.prepared.has(index)?"준비 완료":"아직 준비하지 않음";
     modalRoot.innerHTML=`<div class="bedside-backdrop">
@@ -682,14 +739,17 @@
     document.body.classList.remove("cover-open");
     state.started=false;
     document.getElementById("startScreen").hidden=false;
+    switchMusic("game");
   });
 
   document.getElementById("startBtn").addEventListener("click",()=>{
     configureMode("basic"); state.started=true; document.getElementById("startScreen").hidden=true;
+    switchMusic("game");
     showToast("간호사실 컴퓨터에서 투약카드를 확인하세요.");
   });
   document.getElementById("startRandomBtn").addEventListener("click",()=>{
     configureMode("random"); state.started=true; document.getElementById("startScreen").hidden=true;
+    switchMusic("game");
     showToast(`랜덤 처방 연습 ${state.randomSeed}: 처방에 오류가 있는지 먼저 검토하세요.`);
   });
   document.getElementById("pauseBtn").addEventListener("click",()=>{
