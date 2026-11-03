@@ -80,8 +80,12 @@
               <div class="learning-path">
                 <span>환자 확인</span><i></i><span>용량 계산</span><i></i><span>안전 투약</span>
               </div>
-              <button id="startBtn" class="primary-button" type="button">시뮬레이션 시작</button>
-              <small>게임 속 약물과 용량은 교육용 가상 자료입니다.</small>
+              <div class="mode-buttons">
+                <button id="startBtn" class="primary-button" type="button">기본 시나리오</button>
+                <button id="startRandomBtn" class="secondary-button random-mode-button" type="button">랜덤 처방 연습</button>
+              </div>
+              <label class="seed-field">연습 번호 <input id="randomSeed" value="20261103" inputmode="numeric" aria-label="랜덤 연습 번호"></label>
+              <small>교육용 가상·검토 자료이며 실제 처방이나 임상 판단에 사용할 수 없습니다.</small>
             </div>
           </div>
 
@@ -124,6 +128,11 @@
     </div>
   </template>
 
+  <script src="drug-database.js"></script>
+  <script src="prescription-engine.js"></script>
+  <script src="scenario-generator.js"></script>
+  <script src="medication-validator.js"></script>
+  <script src="medication-feedback.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

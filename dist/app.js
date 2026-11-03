@@ -1,9 +1,9 @@
 (() => {
   "use strict";
 
-  const PATIENTS = [
+  const BASE_PATIENTS = [
     {
-      id: "P-2401", initials: "김○아", dob: "2024-03-18", bed: "1번 침상", age: "2세",
+      id: "P-2401", initials: "김○아", dob: "2024-03-18", bed: "1번 침상", age: "2세", ageMonths: 31, risks: [],
       weight: 10.2, measured: "오늘 07:30", medication: "교육용 흡입약 A", route: "네뷸라이저 흡입",
       routeKey: "neb", time: "09:00", adultDose: 100, dose: 15, maxDose: 15, unit: "mg",
       tool: "네뷸라이저", concentration: "교육용 단일 용량", doses: [0.5, 15, 150],
@@ -11,7 +11,7 @@
       monitor: "호흡수와 산소포화도를 확인했습니다."
     },
     {
-      id: "P-2402", initials: "이○준", dob: "2022-11-04", bed: "2번 침상", age: "4세",
+      id: "P-2402", initials: "이○준", dob: "2022-11-04", bed: "2번 침상", age: "4세", ageMonths: 48, risks: [],
       weight: 17, measured: "오늘 07:40", medication: "교육용 주사약 B", route: "근육주사",
       routeKey: "im", time: "09:30", adultDose: 100, dose: 25, maxDose: 25, unit: "mg",
       tool: "근육주사용 주사기", concentration: "10 mg/mL (교육용)", doses: [2.5, 25, 250],
@@ -19,7 +19,7 @@
       monitor: "주사 부위와 전신 반응을 확인했습니다."
     },
     {
-      id: "P-2403", initials: "박○서", dob: "2020-08-22", bed: "3번 침상", age: "6세",
+      id: "P-2403", initials: "박○서", dob: "2020-08-22", bed: "3번 침상", age: "6세", ageMonths: 75, risks: [],
       weight: 20.4, measured: "오늘 07:50", medication: "교육용 경구약 C", route: "경구",
       routeKey: "po", time: "10:00", adultDose: 100, dose: 30, maxDose: 30, unit: "mg",
       tool: "경구용 약컵", concentration: "10 mg/mL (교육용)", doses: [3, 30, 300],
@@ -28,17 +28,46 @@
     }
   ];
 
-  const TOOLS = ["네뷸라이저", "근육주사용 주사기", "경구용 약컵"];
-  const MEDS = PATIENTS.map(p => p.medication);
+  let PATIENTS = BASE_PATIENTS.map(p=>({...p}));
+  let TOOLS = ["네뷸라이저", "근육주사용 주사기", "경구용 약컵"];
+  let MEDS = PATIENTS.map(p => p.medication);
 
   const state = {
-    started: false, paused: false, score: 100, completed: new Set(),
+    started: false, paused: false, mode: "basic", randomSeed: null, randomScenarios: [], reported: new Set(), score: 100, completed: new Set(),
     selectedPatient: 0, cardsViewed: new Set(), wristChecked: new Set(), handHygiene: new Set(),
     weightChecked: new Set(), compared: new Set(), prepared: new Map(),
     routeErrors: 0, doseErrors: 0, wrongChoices: 0,
     player: { x: 610, y: 790, speed: 3.7, direction: "up", moving: false },
     keys: {}, lastTime: 0, nearby: null
   };
+
+  function configureMode(mode){
+    state.mode=mode;
+    state.reported.clear();
+    if(mode==="random"){
+      const seed=document.getElementById("randomSeed").value.trim()||String(Date.now());
+      state.randomSeed=seed;
+      try{
+        state.randomScenarios=window.DoseverseScenarios.generate(BASE_PATIENTS,seed);
+        PATIENTS=state.randomScenarios.map((scenario,index)=>{
+          const c=scenario.correctPrescription;
+          return {...BASE_PATIENTS[index],medication:c.medication,route:c.route,routeKey:c.routeKey,time:c.time,dose:c.doseMg,maxDose:c.maxDoseMg,unit:"mg",tool:c.tool,concentration:c.concentration,doses:[Number((c.doseMg/10).toFixed(2)),c.doseMg,Number((c.doseMg*10).toFixed(2))],adultDose:null,volumeMl:c.volumeMl,interval:c.interval,minInfusionMinutes:c.minInfusionMinutes,scenarioIndex:index};
+        });
+        MEDS=[...new Set(PATIENTS.map(p=>p.medication))];
+        TOOLS=[...new Set(PATIENTS.map(p=>p.tool))];
+        localStorage.setItem("doseverseRandomSessionV1",JSON.stringify({version:window.DoseverseDrugDB.version,seed,scenarios:state.randomScenarios,createdAt:new Date().toISOString()}));
+      }catch(error){
+        console.warn("랜덤 처방을 생성하지 못해 기본 시나리오로 전환합니다.",error);
+        return configureMode("basic");
+      }
+    }else{
+      PATIENTS=BASE_PATIENTS.map(p=>({...p}));
+      MEDS=PATIENTS.map(p=>p.medication);
+      TOOLS=["네뷸라이저", "근육주사용 주사기", "경구용 약컵"];
+      state.randomScenarios=[];
+    }
+    resetState();
+  }
 
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
@@ -69,8 +98,9 @@
 
   function resetState() {
     state.score = 100; state.completed.clear(); state.cardsViewed.clear(); state.wristChecked.clear(); state.handHygiene.clear();
-    state.weightChecked.clear(); state.compared.clear(); state.prepared.clear();
+    state.weightChecked.clear(); state.compared.clear(); state.prepared.clear(); state.reported.clear();
     state.routeErrors = 0; state.doseErrors = 0; state.wrongChoices = 0;
+    state.selectedPatient = 0;
     state.player.x = 610; state.player.y = 790; state.player.direction = "up";
     updateHUD(); updateTasks(); closeModal();
   }
@@ -104,7 +134,7 @@
     let title = `${p.bed} 투약카드를 확인하세요`;
     let desc = "간호사실 컴퓨터에서 처방 내용을 먼저 확인합니다.";
     if (state.cardsViewed.has(i)) { active = "identity"; title = `${p.bed} 환자를 확인하세요`; desc = "환자에게 말을 걸고 입원팔찌를 확인합니다."; }
-    if (state.wristChecked.has(i)) { active = "weight"; title = "Clark 공식으로 용량을 계산하세요"; desc = "아동 체중과 성인 용량 100mg을 이용해 적정 용량을 계산합니다."; }
+    if (state.wristChecked.has(i)) { active = "weight"; title = state.mode==="random"?"체중·농도로 용량을 검산하세요":"Clark 공식으로 용량을 계산하세요"; desc = state.mode==="random"?"약물별 기준용량, 최대용량과 농도를 차례로 확인합니다.":"아동 체중과 성인 용량 100mg을 이용해 적정 용량을 계산합니다."; }
     if (state.weightChecked.has(i) && state.compared.has(i)) { active = "prepare"; title = "약물과 투약기구를 준비하세요"; desc = "약품 준비대에서 처방에 맞는 약물, 기구와 용량을 고릅니다."; }
     if (state.prepared.has(i)) { active = "admin"; title = `${p.bed}에서 최종 확인하세요`; desc = "환자 앞에서 다섯 항목을 대조한 뒤 투약합니다."; }
     if (state.completed.has(i)) {
@@ -309,6 +339,16 @@
   }
 
   function medCardHTML(p) {
+    if(state.mode==="random"){
+      const scenario=state.randomScenarios[p.scenarioIndex];
+      const rx=state.reported.has(p.scenarioIndex)?scenario.correctPrescription:scenario.displayedPrescription;
+      const status=state.reported.has(p.scenarioIndex)?"오류 확인 후 정정된 교육용 처방":"검토 전 처방 · 오류가 포함될 수 있음";
+      return `<div class="med-card random-card"><div class="random-card-heading"><h3>${p.bed} 랜덤 투약카드</h3><span>${status}</span></div><div class="data-grid">
+        ${dataItem("환자번호",p.id)}${dataItem("환자",p.initials)}${dataItem("약물명",rx.medication)}${dataItem("처방 용량",`${rx.doseMg} mg`)}
+        ${dataItem("투여경로",rx.route)}${dataItem("투약시간",rx.time)}${dataItem("최신 체중",`${p.weight} kg · ${p.measured}`)}${dataItem("투약기구",rx.tool)}
+        ${dataItem("1회 최대용량",`${rx.maxDoseMg} mg`)}${dataItem("제형·농도",rx.concentration)}${dataItem("계산 부피",`${rx.volumeMl} mL`)}${dataItem("투여 간격",rx.interval)}
+      </div><div class="clark-rule"><span class="key-term">약물별 계산</span><br>${scenario.drug.doseType==="fixed"?`${scenario.drug.fixedDoseMg} mg 고정용량`:`${p.weight}kg × ${scenario.drug.doseMgKg}mg/kg`} → 최대용량 확인 → 농도 환산</div><span class="education-tag">교육용 검토 자료 · 실제 임상 사용 금지</span></div>`;
+    }
     return `<div class="med-card"><h3>${p.bed} 투약카드</h3><div class="data-grid">
       ${dataItem("환자번호",p.id)}${dataItem("환자",p.initials)}${dataItem("약물명",p.medication)}${dataItem("처방 용량",`${p.dose} ${p.unit}`)}
       ${dataItem("투여경로",p.route)}${dataItem("투약시간",p.time)}${dataItem("최신 체중",`${p.weight} kg · ${p.measured}`)}${dataItem("성인 용량",`${p.adultDose} mg`)}
@@ -323,7 +363,7 @@
   function openMedicationCards() {
     const tabs=PATIENTS.map((p,i)=>`<button class="tab-button ${i===state.selectedPatient?"active":""}" data-patient-tab="${i}">${p.bed}</button>`).join("");
     makeDialog("NURSES' STATION","투약카드 확인",`<div class="patient-tabs">${tabs}</div><div id="cardArea">${medCardHTML(PATIENTS[state.selectedPatient])}</div>`,
-      `<button class="secondary-button" data-close>닫기</button><button class="primary-button" id="confirmCard">이 처방을 확인했습니다</button>`,true);
+      `<button class="secondary-button" data-close>닫기</button>${state.mode==="random"?'<button class="secondary-button report-button" id="reportPrescription">처방 오류 확인·보고</button>':''}<button class="primary-button" id="confirmCard">이 처방을 확인했습니다</button>`,true);
     bindCardDialog();
   }
 
@@ -333,7 +373,19 @@
       modalRoot.querySelectorAll("[data-patient-tab]").forEach(b=>b.classList.toggle("active",b===btn));
       modalRoot.querySelector("#cardArea").innerHTML=medCardHTML(PATIENTS[state.selectedPatient]);
     }));
+    modalRoot.querySelector("#reportPrescription")?.addEventListener("click",()=>{
+      const scenario=state.randomScenarios[state.selectedPatient];
+      const result=window.DoseverseValidator.compare(scenario);
+      if(result.safe){deduct(2,"other","현재 처방에서 불일치가 확인되지 않았습니다.");return;}
+      state.reported.add(state.selectedPatient);
+      modalRoot.querySelector("#cardArea").innerHTML=medCardHTML(PATIENTS[state.selectedPatient]);
+      showToast(`${result.field} 불일치를 발견해 처방을 정정했습니다.`);
+    });
     modalRoot.querySelector("#confirmCard").addEventListener("click",()=>{
+      if(state.mode==="random"){
+        const result=window.DoseverseValidator.compare(state.randomScenarios[state.selectedPatient]);
+        if(!result.safe&&!state.reported.has(state.selectedPatient)){showToast(`${result.field} 불일치가 있습니다. 투약 전 확인·보고하세요.`,true);return;}
+      }
       state.cardsViewed.add(state.selectedPatient); showToast(`${PATIENTS[state.selectedPatient].bed} 투약카드를 확인했습니다.`); closeModal();
     });
   }
@@ -431,6 +483,12 @@
     const p=PATIENTS[index];
     if(!state.cardsViewed.has(index)){showToast("먼저 간호사실에서 이 환자의 투약카드를 확인하세요.",true);closeModal();return;}
     const options=p.doses.map(d=>`<button class="answer-button" data-dose="${d}">${d} ${p.unit}</button>`).join("");
+    if(state.mode==="random"){
+      const scenario=state.randomScenarios[index],c=scenario.correctPrescription,drug=scenario.drug;
+      makeDialog("WEIGHT-BASED CHECK","약물별 소아 용량 검산",`<div class="calc-card"><div class="data-grid">${dataItem("최신 체중",`${p.weight} kg`)}${dataItem("기준용량",drug.doseType==="fixed"?`${drug.fixedDoseMg} mg 고정`:`${drug.doseMgKg} mg/kg`)}${dataItem("1회 최대용량",`${drug.maxDoseMg} mg`)}${dataItem("약물 농도",drug.concentration)}</div><div class="clark-rule"><span class="key-term">검산 순서</span><br>① 체중·연령 확인 → ② mg 계산 → ③ 최대용량 확인 → ④ mg/mL로 부피 환산<br>정답: ${c.doseMg}mg ÷ ${c.concentrationMgMl}mg/mL = ${c.volumeMl}mL</div><div class="answer-grid">${options}</div><span class="education-tag">약물별 교육용 기준이며 Clark 공식은 적용하지 않습니다.</span></div>`,`<button class="secondary-button" data-close>취소</button>`,true);
+      modalRoot.querySelectorAll("[data-dose]").forEach(btn=>btn.addEventListener("click",()=>{const answer=Number(btn.dataset.dose);if(answer===p.dose){state.weightChecked.add(index);showToast(`용량 ${p.dose}mg, 부피 ${p.volumeMl}mL를 확인했습니다.`);closeModal();}else deduct(answer>=p.dose*10?10:3,"dose","기준용량·최대용량·농도를 차례로 다시 확인하세요.");}));
+      return;
+    }
     makeDialog("CLARK'S RULE","Clark 공식으로 아동 용량 계산",`<div class="calc-card">
       <div class="data-grid">${dataItem("최신 체중",`${p.weight} kg`)}${dataItem("측정 시각",p.measured)}${dataItem("성인 평균 체중","68 kg")}${dataItem("성인 용량",`${p.adultDose} mg`)}</div>
       <div class="clark-rule"><span class="key-term">아동 용량</span> = (아동 체중 ÷ 68kg) × 성인 용량<br>(${p.weight}kg ÷ 68kg) × ${p.adultDose}mg = ?</div>
@@ -590,6 +648,14 @@
       time:patient.time,
       tool:patient.tool,
       concentration:patient.concentration,
+      mode:state.mode,
+      randomSeed:state.randomSeed,
+      volumeMl:patient.volumeMl||null,
+      prescriptionReview:state.mode==="random"?{
+        reported:state.reported.has(index),
+        injectedError:state.randomScenarios[index]?.injectedError||null,
+        correctPrescription:state.randomScenarios[index]?.correctPrescription||null
+      }:null,
       checks:{
         card:state.cardsViewed.has(index),
         wrist:state.wristChecked.has(index),
@@ -614,14 +680,17 @@
   document.getElementById("enterSimulation").addEventListener("click",()=>{
     document.getElementById("appCover").hidden=true;
     document.body.classList.remove("cover-open");
-    state.started=true;
-    document.getElementById("startScreen").hidden=true;
-    showToast("간호사실 컴퓨터에서 투약카드를 확인하세요.");
+    state.started=false;
+    document.getElementById("startScreen").hidden=false;
   });
 
   document.getElementById("startBtn").addEventListener("click",()=>{
-    state.started=true; document.getElementById("startScreen").hidden=true;
+    configureMode("basic"); state.started=true; document.getElementById("startScreen").hidden=true;
     showToast("간호사실 컴퓨터에서 투약카드를 확인하세요.");
+  });
+  document.getElementById("startRandomBtn").addEventListener("click",()=>{
+    configureMode("random"); state.started=true; document.getElementById("startScreen").hidden=true;
+    showToast(`랜덤 처방 연습 ${state.randomSeed}: 처방에 오류가 있는지 먼저 검토하세요.`);
   });
   document.getElementById("pauseBtn").addEventListener("click",()=>{
     if(!state.started)return; state.paused=true; document.getElementById("pauseScreen").hidden=false;
