@@ -9,10 +9,6 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="cover-open">
-  <div class="audio-controls" role="group" aria-label="배경음악 조절">
-    <button id="musicToggle" class="music-toggle" type="button" aria-pressed="false" aria-label="배경음악 끄기"><span aria-hidden="true">🔊</span><span class="music-label">음악</span></button>
-    <label class="volume-control" for="musicVolume"><span>음량</span><input id="musicVolume" type="range" min="0" max="100" value="45" aria-label="배경음악 음량"></label>
-  </div>
   <audio id="backgroundMusic" src="assets/music-cover.m4a" loop preload="metadata"></audio>
   <section id="appCover" class="app-cover" aria-label="DOSEVERSE 앱 표지">
     <img src="assets/app-cover.jpg" alt="DOSEVERSE 간호 투약 시뮬레이션 표지">
@@ -37,6 +33,10 @@
         <button id="pauseBtn" class="icon-button" type="button">일시정지</button>
         <button id="openYakAnsim" class="icon-button yak-button" type="button">약 안심</button>
         <button id="resetBtn" class="icon-button danger" type="button">처음부터</button>
+        <div class="audio-controls" role="group" aria-label="배경음악 조절">
+          <button id="musicToggle" class="music-toggle" type="button" aria-pressed="false" aria-label="배경음악 끄기"><span aria-hidden="true">🔊</span><span class="music-label">음악</span></button>
+          <label class="volume-control" for="musicVolume"><span>음량</span><input id="musicVolume" type="range" min="0" max="100" value="45" aria-label="배경음악 음량"></label>
+        </div>
       </div>
       <section class="header-task" aria-label="현재 과제">
         <div class="header-task-copy">
